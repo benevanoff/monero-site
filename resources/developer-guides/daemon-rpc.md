@@ -249,15 +249,15 @@ Inputs: *None*.
 Outputs:
 
 * *block_header* - A structure containing block header information.
-  * *block_size* - unsigned int; The block size in bytes.
-  * *block_weight* - TODO
+  * *block_size* - unsigned int; Backward compatibility, same as *block_weight*, use that instead
+  * *block_weight* - unsigned int; The adjusted block size, in bytes. This is the raw size, plus a positive adjustment for any Bulletproof transactions with more than 2 outputs.
   * *cumulative_difficulty* - unsigned int; Cumulative difficulty of all blocks up to the block in the reply.
   * *cumulative_difficulty_top64* - unsigned int; Most-significant 64 bits of the 128-bit cumulative difficulty.
   * *depth* -  unsigned int; The number of blocks succeeding this block on the blockchain. A larger number means an older block.
   * *difficulty* - unsigned int; The strength of the Monero network based on mining power.
   * *hash* - string; The hash of this block.
   * *height* - unsigned int; The number of blocks preceding this block on the blockchain.
-  * *long_term_weight* - TODO
+  * *long_term_weight* - unsigned int; The long term block weight, based on the median weight of the preceding 100000 blocks.
   * *major_version* - unsigned int; The major version of the monero protocol at this block height.
   * *miner_tx_hash* - string; The hash of this block's coinbase transaction.
   * *minor_version* - unsigned int; The minor version of the monero protocol at this block height.
