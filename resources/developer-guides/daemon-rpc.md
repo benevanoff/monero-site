@@ -259,7 +259,7 @@ Outputs:
   * *height* - unsigned int; The number of blocks preceding this block on the blockchain.
   * *long_term_weight* - TODO
   * *major_version* - unsigned int; The major version of the monero protocol at this block height.
-  * *miner_tx_hash* - TODO
+  * *miner_tx_hash* - string; The hash of this block's coinbase transaction.
   * *minor_version* - unsigned int; The minor version of the monero protocol at this block height.
   * *nonce* - unsigned int; a cryptographic random one-time number used in mining a Monero block.
   * *num_txes* - unsigned int; Number of transactions in the block, not counting the coinbase tx.
@@ -1122,7 +1122,7 @@ Inputs: *None*.
 
 Outputs:
 
-* *release* - TODO
+* *release* - boolean; States if the daemon software version corresponds to an official tagged release (`true`), or not (`false`)
 * *status* - string; General RPC error code. "OK" means everything looks good.
 * *untrusted* - boolean; States if the result is obtained using the bootstrap mode, and is therefore not trusted (`true`), or when the daemon is fully synced and thus handles the RPC locally (`false`)
 * *version* - unsigned int;
