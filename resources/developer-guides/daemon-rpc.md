@@ -30,6 +30,7 @@ Note: "@atomic-units" refer to the smallest fraction of 1 XMR according to the m
 * [hard_fork_info](#hard_fork_info)
 * [set_bans](#set_bans)
 * [get_bans](#get_bans)
+* [flush_txpool](#flush_txpool)
 * [get_output_histogram](#get_output_histogram)
 * [get_version](#get_version)
 * [get_coinbase_tx_sum](#get_coinbase_tx_sum)
@@ -39,6 +40,19 @@ Note: "@atomic-units" refer to the smallest fraction of 1 XMR according to the m
 * [sync_info](#sync_info)
 * [get_txpool_backlog](#get_txpool_backlog)
 * [get_output_distribution](#get_output_distribution)
+* [get_miner_data](#get_miner_data)
+* [add_aux_pow](#add_aux_pow)
+* [generateblocks](#generateblocks)
+* [banned](#banned)
+* [prune_blockchain](#prune_blockchain)
+* [flush_cache](#flush_cache)
+* [rpc_access_info](#rpc_access_info)
+* [rpc_access_submit_nonce](#rpc_access_submit_nonce)
+* [rpc_access_pay](#rpc_access_pay)
+* [rpc_access_tracking](#rpc_access_tracking)
+* [rpc_access_data](#rpc_access_data)
+* [rpc_access_account](#rpc_access_account)
+
 
 ### [Other RPC Methods](#other-daemon-rpc-calls):
 
@@ -1424,6 +1438,29 @@ $ curl http://127.0.0.1:18081/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"g
   }
 }
 ```
+
+
+### **get_miner_data**
+
+
+Alias: *None*.
+
+Inputs: *None*.
+
+
+Outputs:
+
+* *major_version* - unsigned int; The major version being currently used by the miner.
+* *height* - unsigned int; Height of block miner is trying to find.
+* *prev_id* - string (32 byte hex); Hash of block miner is mining on top of.
+* *seed_hash* - string (32 byte hex); Hash of the block used as seed for Random-X.
+* *difficulty* - string (32 byte hex); 128 bit integer encoded as hex string representing the difficulty for the block the miner is trying to find.
+* *median_weight* - usigned int; Median current cumulative weight of the chain the miner is mining on.
+* *already_generated_coins* - unsigned int; The sum of all money generated via coinbase rewards.
+* *tx_backlog* - array of tx_backlog objects representing the transactions currently ready to be mined in the tx pool.
+  * *id* - string (32 byte hex); The transaction hash.
+  * *weight* - unsigned int; Weight of transaction for use in calculating coinbase rewards.
+  * *fee* - unsigned int; The fee included in the transaction that the miner may collect.
 
 
 ---
