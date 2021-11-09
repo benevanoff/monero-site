@@ -168,15 +168,15 @@ Outputs:
 
 * *blocktemplate_blob* - string; Blob on which to try to mine a new block.
 * *blockhashing_blob* - string; Blob on which to try to find a valid nonce.
-* *difficulty* - unsigned int; Difficulty of next block.
+* *difficulty* - unsigned int; Least-significant 64 bits of the 128-bit network difficulty.
 * *difficulty_top64* - unsigned int; Most-significant 64 bits of the 128-bit network difficulty.
 * *expected_reward* - unsigned int; Coinbase reward expected to be received if block is successfully mined.
 * *height* - unsigned int; Height on which to mine.
-* *next_seed_hash* - TODO
+* *next_seed_hash* - string; Hash of the next block to use as seed for Random-X proof-of-work.
 * *prev_hash* - string; Hash of the most recent block on which to mine the next block.
 * *reserved_offset* - unsigned int; Reserved offset.
-* *seed_hash* - TODO
-* *seed_height* - TODO
+* *seed_hash* - string; Hash of block to use as seed for Random-X proof-of-work.
+* *seed_height* - unsigned int; Height of block to use as seed for Random-X proof-of-work.
 * *status* - string; General RPC error code. "OK" means everything looks good.
 * *untrusted* - boolean; States if the result is obtained using the bootstrap mode, and is therefore not trusted (`true`), or when the daemon is fully synced and thus handles the RPC locally (`false`)
 * *wide_difficulty* - string; Network difficulty (analogous to the strength of the network) as a hexadecimal string representing a 128-bit number.
@@ -264,7 +264,7 @@ Outputs:
   * *nonce* - unsigned int; a cryptographic random one-time number used in mining a Monero block.
   * *num_txes* - unsigned int; Number of transactions in the block, not counting the coinbase tx.
   * *orphan_status* - boolean; Usually `false`. If `true`, this block is not part of the longest chain.
-  * *pow_hash* - TODO
+  * *pow_hash* - string; The hash, as a hexadecimal string, included in the block as proof-of-work.
   * *prev_hash* - string; The hash of the block immediately preceding this block in the chain.
   * *reward* - unsigned int; The amount of new @atomic-units generated in this block and rewarded to the miner. Note: 1 XMR = 1e12 @atomic-units.
   * *timestamp* - unsigned int; The unix time at which the block was recorded into the blockchain.
@@ -1078,15 +1078,15 @@ Inputs:
 Outputs:
 
 * *credits* - unsigned int; If payment for RPC is enabled, the number of credits available to the requesting client. Otherwise, 0.
-* *emission_amount* - unsigned int; amount of coinbase reward in @atomic-units
-* *emission_amount_top64* - TODO
-* *fee_amount* - unsigned int; amount of fees in @atomic-units
-* *fee_amount_top64* - TODO
+* *emission_amount* - unsigned int; Least significant 64 bits for 128 bit integer representing the sum of coinbase rewards in @atomic-units. (See src/rpc/core_rpc_server.cpp store_128)
+* *emission_amount_top64* - unsigned it; Most significant 64 bits for 128 bit integer representing the sum of coinbase rewards in @atomic-units
+* *fee_amount* - unsigned int; Most significant 64 bits for 128 bit integer representing the sum of fees in @atomic-units.
+* *fee_amount_top64* - unsigned int; Most significant 64 bits for 128 bit integer representing the sum of fees in @atomic-units.
 * *status* - string; General RPC error code. "OK" means everything looks good.
 * *top_hash* - string; If payment for RPC is enabled, the hash of the highest block in the chain. Otherwise, empty.
 * *untrusted* - boolean; States if the result is obtained using the bootstrap mode, and is therefore not trusted (`true`), or when the daemon is fully synced and thus handles the RPC locally (`false`)
-* *wide_emission_amount* - TODO
-* *wide_fee_amount* - TODO
+* *wide_emission_amount* - string (128 bit hex encoded integer); Sum of coinbase rewards in @atomic-units.
+* *wide_fee_amount* - string (128 bit hex encoded integer); Sum of fees in @atomic-units.
 
 Example:
 
@@ -1195,12 +1195,12 @@ Outputs:
 
 * *chains* - array of chains, the following structure:
   * *block_hash* - string; the block hash of the first diverging block of this alternative chain.
-  * *block_hashes* - TODO
-  * *difficulty* - unsigned int; the cumulative difficulty of all blocks in the alternative chain.
+  * *block_hashes* - array of strings; An array of all block hashes in the alternative chain that are not in the main chain.
+  * *difficulty* - unsigned int; Least-significant 64 bits of 128-bit integer for the cumulative difficulty of all blocks in the alternative chain.
   * *difficulty_top64* - unsigned int; Most-significant 64 bits of the 128-bit network difficulty.
   * *height* - unsigned int; the block height of the first diverging block of this alternative chain.
   * *length* - unsigned int; the length in blocks of this alternative chain, after divergence.
-  * *main_chain_parent_block* - TODO
+  * *main_chain_parent_block* - string; The hash of the greatest height block that is shared between the alternative chain and the main chain.
   * *wide_difficulty* - string; Network difficulty (analogous to the strength of the network) as a hexadecimal string representing a 128-bit number.
 * *status* - string; General RPC error code. "OK" means everything looks good.
 * *untrusted* - boolean; States if the result is obtained using the bootstrap mode, and is therefore not trusted (`true`), or when the daemon is fully synced and thus handles the RPC locally (`false`)
@@ -1272,8 +1272,8 @@ Outputs:
 
 * *credits* - unsigned int; If payment for RPC is enabled, the number of credits available to the requesting client. Otherwise, 0.
 * *height* - unsigned int;
-* *next_needed_pruning_seed* - TODO
-* *overview* - TODO
+* *next_needed_pruning_seed* - unsigned int; The next pruning seed needed for pruned sync.
+* *overview* - string; Overview of current block queue where each character in the string represents a block set in the queue. `. = requested but not recieved`, `o = set received`, `m  = received set that matches the next blocks needed`
 * *peers* - array of peer structure, defined as follows:
   * *info* - structure of connection info, as defined in [get_connections](#get_connections)
 * *spans* - array of span structure, defined as follows (optional, absent if node is fully synced):
@@ -1663,9 +1663,9 @@ Outputs:
   * *double_spend_seen* - boolean; States if the transaction is a double-spend (`true`) or not (`false`)
   * *in_pool* - boolean; States if the transaction is in pool (`true`) or included in a block (`false`)
   * *output_indices* - array of unsigned int; transaction indexes
-  * *prunable_as_hex* - TODO
-  * *prunable_hash* - TODO
-  * *pruned_as_hex* - TODO
+  * *prunable_as_hex* - string; Prunable block encoded as a hex string.
+  * *prunable_hash* - string; Keccak-256 hash of the prunable portion of the block.
+  * *pruned_as_hex* - string; Pruned block encoded as hex string.
   * *tx_hash* - string; transaction hash
 * *txs_as_hex* - string; Full transaction information as a hex string (old compatibility parameter)
 * *txs_as_json* - json string; (Optional - returned if set in inputs. Old compatibility parameter) List of transaction as in *as_json* above:
@@ -1905,16 +1905,16 @@ Outputs:
 
 * *active* - boolean; States if mining is enabled (`true`) or disabled (`false`).
 * *address* - string; Account address daemon is mining to. Empty if not mining.
-* *bg_idle_threshold* - TODO
-* *bg_ignore_battery* - TODO
-* *bg_min_idle_seconds* - TODO
-* *bg_target* - TODO
-* *block_reward* - TODO
-* *block_target* - TODO
+* *bg_idle_threshold* - int; Minimum average idle percentage over lookback interval.
+* *bg_ignore_battery* - boolean; If false, the device will stop mining when battery is low.
+* *bg_min_idle_seconds* - int; Minimum lookback interval in seconds for determining whether the device is idle or not.
+* *bg_target* - int; Maximum percentage cpu use by miner.
+* *block_reward* - int; Base block reward for the next block to be mined.
+* *block_target* - int; The target number of seconds between blocks.
 * *difficulty* - unsigned int; Network difficulty (analogous to the strength of the network)
 * *difficulty_top64* - unsigned int; Most-significant 64 bits of the 128-bit network difficulty.
 * *is_background_mining_enabled* - boolean; States if the mining is running in background (`true`) or foreground (`false`).
-* *pow_algorithm* - TODO
+* *pow_algorithm* - string; The name of the proof-of-work algorithm currently being used by the miner.
 * *speed* - unsigned int; Mining power in hashes per seconds.
 * *status* - string; General RPC error code. "OK" means everything looks good. Any other value means that something went wrong.
 * *threads_count* - unsigned int; Number of running mining threads.
@@ -2355,7 +2355,7 @@ Outputs:
   * *bytes_med* - unsigned int; Median transaction size in pool
   * *bytes_min* - unsigned int; Min transaction size in pool
   * *bytes_total* - unsigned int; total size of all transactions in pool
-  * *fee_total* - TODO
+  * *fee_total* - unsigned int; The sum of the fees for all transactions currently in the transaction pool @atomic-units.
   * *histo* - structure *txpool_histo* as follows:
     * *txs* - unsigned int; number of transactions
     * *bytes* - unsigned int; size in bytes.
@@ -2662,4 +2662,3 @@ $ curl http://127.0.0.1:18081/update -d '{"command":"check"}' -H 'Content-Type: 
   "version": ""
 }
 ```
-
