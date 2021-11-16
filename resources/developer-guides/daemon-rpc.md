@@ -31,6 +31,7 @@ Note: "@atomic-units" refer to the smallest fraction of 1 XMR according to the m
 * [hard_fork_info](#hard_fork_info)
 * [set_bans](#set_bans)
 * [get_bans](#get_bans)
+* [flush_txpool](#flush_txpool)
 * [get_output_histogram](#get_output_histogram)
 * [get_version](#get_version)
 * [get_coinbase_tx_sum](#get_coinbase_tx_sum)
@@ -40,6 +41,19 @@ Note: "@atomic-units" refer to the smallest fraction of 1 XMR according to the m
 * [sync_info](#sync_info)
 * [get_txpool_backlog](#get_txpool_backlog)
 * [get_output_distribution](#get_output_distribution)
+* [get_miner_data](#get_miner_data)
+* [add_aux_pow](#add_aux_pow)
+* [generateblocks](#generateblocks)
+* [banned](#banned)
+* [prune_blockchain](#prune_blockchain)
+* [flush_cache](#flush_cache)
+* [rpc_access_info](#rpc_access_info)
+* [rpc_access_submit_nonce](#rpc_access_submit_nonce)
+* [rpc_access_pay](#rpc_access_pay)
+* [rpc_access_tracking](#rpc_access_tracking)
+* [rpc_access_data](#rpc_access_data)
+* [rpc_access_account](#rpc_access_account)
+
 
 ### [Other RPC Methods](#other-daemon-rpc-calls):
 
@@ -1425,6 +1439,231 @@ $ curl http://127.0.0.1:18081/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"g
   }
 }
 ```
+
+
+### **get_miner_data**
+
+Fetch data about miner running from monerod.
+
+Alias: *None*.
+
+Inputs: *None*.
+
+
+Outputs:
+
+* *major_version* - unsigned int; The major version being currently used by the miner.
+* *height* - unsigned int; Height of block miner is trying to find.
+* *prev_id* - string (32 byte hex); Hash of block miner is mining on top of.
+* *seed_hash* - string (32 byte hex); Hash of the block used as seed for Random-X.
+* *difficulty* - string (32 byte hex); 128 bit integer encoded as hex string representing the difficulty for the block the miner is trying to find.
+* *median_weight* - usigned int; Median current cumulative weight of the chain the miner is mining on.
+* *already_generated_coins* - unsigned int; The sum of all money generated via coinbase rewards.
+* *tx_backlog* - array of tx_backlog objects representing the transactions currently ready to be mined in the tx pool.
+  * *id* - string (32 byte hex); The transaction hash.
+  * *weight* - unsigned int; Weight of transaction for use in calculating coinbase rewards.
+  * *fee* - unsigned int; The fee included in the transaction that the miner may collect.
+
+
+
+### **add_aux_pow**
+
+Insert auxilary proof-of-work for merged-mining into a block header.
+
+Alias: *None*.
+
+Inputs:
+
+* *blocktemplate_blob* - string; The block template to use serialized into a hex string.
+* *aux_pow* - An array of aux_pow objects, which each contain two data members:
+  * *id* - string; The merged mining id to use.
+  * *hash* - string; The hash to use as auxilary proof-of-work.
+
+Outputs:
+* *blocktemplate_blob* - string; The modified block template with the auxilary proof-of-work inserted into the coinbase tx extra field. See core_rpc_server::on_add_aux_pow.
+* *blockhashing_blob* - string; The modified block template to be hashed for proof-of-work on Monero main chain.
+* *merkle_root* - string; Auxilary proof-of-work merkle tree root.
+* *merkle_tree_depth* usigned int; Auxilary proof-of-work merkle tree depth.
+* *aux_pow* - The array of aux_pow objects from the request.
+
+
+### **generateblocks**
+
+For use only in regression testing mode. Generate new blocks on your fake chain.
+
+Alias: *None*.
+
+Inputs:
+
+* *amount_of_blocks* - unsigned int; The count of blocks to generate.
+* *wallet_address* - string (base 58 encoded address); The wallet address used for coinbase rewards in the newly generated blocks.
+* *prev_block* - 32 byte hex string; The hash of the block to mine on top of.
+* *starting_nonce* - usigned int; The nonce you choose to begin with when "mining" these fake blocks.
+
+Outputs:
+
+* *height* - usigned int; The new chain height.
+* *blocks* - array of strings; Each string is the block id of each block generated.
+
+
+### **banned**
+
+Check if some host is banned by your node.
+
+Alias: *None*.
+
+Inputs:
+
+* *address* - string; The IP address to check.
+
+Outputs:
+
+* *banned* - boolean; True if banned, false if not.
+* *seconds* - unsigned int; Number of seconds this node is banned for.
+* *status* - string; General RPC error code. "OK" means everything looks good.
+
+
+### **prune_blockchain**
+
+Manage blockchain pruning.
+
+Alias: *None*.
+
+Inputs:
+
+* *check* - boolean; If true we only check if the node is using a pruned blockchain database. If false we will attempt to prune the blockchain database.
+
+Outputs:
+
+* *pruned* - boolean; Is this node using a pruned blockchain database.
+* *pruning_seed* - usigned int; This node's pruning seed number.
+
+
+### **flush_cache**
+
+Flush bad blocks and/or transactions from the node's cache.
+
+Alias: *None*.
+
+Inputs:
+
+* *bad_txs* - boolean; Flush bad transactions from node cache.
+* *bad_blocks* - boolean; Flush bad blocks from node cache.
+
+Outputs: *None*.
+
+---
+
+## RPC Pay Methods
+
+It is possible to configure a node to serve client wallets with blockchain data in exchange for proof-of-work that the node operator can use to try to collect miner rewards from.
+
+The following JSON RPC methods are specifically for facilitating this functionality.
+
+Every RPC Pay method request must include a client id (an elliptic curve public key).
+
+### **rpc_access_info**
+
+Fetch some general info about RPC Pay settings and status.
+
+Alias: *None*.
+
+Inputs: *None*.
+
+Outputs:
+
+* *hashing_blob* - string; A block template for the next block with the reward pointing toward the node operator, serialized to a hex string.
+* *seed_height* - usigned int; The height of the block to use as seed in Random-X proof-of-work.
+* *seed_hash* - string (32 byte hex); The id of the block to use as seed in Random-X proof-of-work.
+* *next_seed_hash* - string (32 byte hex); The id of the next block to use as seed in Random-X proof-of-work.
+* *cookie* - usigned int; The identifier cookie to keep track of the client.
+* *diff* unsigned int; The current network difficulty.
+* *credits_per_hash_found* usigned int; The number of credits awarded per hash found.
+* *height* - usigned int; The current height of the chain.
+
+
+### **rpc_access_submit_nonce**
+
+Submit a nonce as proof-of-work for credit.
+
+Alias: *None*.
+
+Inputs:
+
+* *nonce* - unsigned int; The nonce to submit for credit.
+* *cookie* - unsigned int; The cookie for keeping track of client.
+
+Outputs: *None*.
+
+
+### **rpc_access_pay**
+
+Make a payment for an RPC-Pay operation.
+
+Alias: *None*.
+
+Inputs:
+
+* *paying_for* - string; The name of the RPC method to pay for.
+* *payment* - unsigned int; The number of credits to pay.
+
+Outputs: *None*.
+
+
+### **rpc_access_tracking**
+
+Get tracking data about RPC methods that can be payed for.
+
+Alias: *None*.
+
+Inputs:
+
+* *clear* - boolean; If true, the node will clear all tracking histories.
+
+Outputs:
+
+* *data* - array of entry objects; Each entry contains data about RPC methods currently tracked by the server.
+  * *rpc* - string; The name of the rpc method tracked.
+  * *count* - unsigned int; The number of times this method was called by RPC pay clients.
+  * *time* - unsigned int; The time spent performing this operation.
+  * *credits* - unsigned int; Count of credits collected for this method.
+
+
+### **rpc_access_data**
+
+Get client records maintained by server.
+
+Alias: *None*.
+
+Inputs: *None*.
+
+Outputs:
+
+* *entries* - array of entry objects; Each element in the array contains data about a client.
+  * *client* - string (32 byte hex); The public key for the client this entry refers to.
+  * *balance* - unsigned int; The credit balance this client holds with the server.
+  * *last_update_time* - unsigned int; The last time the entry was updated in unix epoch time.
+  * *credits_total* - unsigned int; Total credits earned via proof-of-work.
+  * *credits_used* - unsigned int; The total count of credits spent in exchange for RPC operations.
+  * *nonces_good* - unsigned int; The count of nonces accepted for credit.
+  * *nonces_stale* - unsigned int; The count of nonces submitted by client that were determined by the server to be stale.
+  * *nonces_bad* - unsigned int; The count of nonces submitted by the client that were determined by the server to be invalid.
+  * *nonces_dupe* - unsigned int; The count of nonces submitted by the client that were determined by the server to be duplicates.
+* *hashrate* - unsigned int; The number of hashes produced per second averaged over the last 600 seconds.
+
+
+### **rpc_access_account**
+
+Get/manage the balance for a specific RPC-Pay client account.
+
+Inputs:
+
+* *client* - string (32 byte hex); Client id.
+* *delta_balance* - signed int; Value to change balance by. (Optional)
+
+Outputs:
+
+* *credits* - unsigned int; The specified client's credit balance.
 
 
 ---
