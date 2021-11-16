@@ -1481,8 +1481,8 @@ Inputs:
 Outputs:
 * *blocktemplate_blob* - string; The modified block template with the auxilary proof-of-work inserted into the coinbase tx extra field. See core_rpc_server::on_add_aux_pow.
 * *blockhashing_blob* - string; The modified block template to be hashed for proof-of-work on Monero main chain.
-* *merkle_root* - string; // TODO
-* *merkle_tree_depth* usigned int; // TODO
+* *merkle_root* - string; Auxilary proof-of-work merkle tree root.
+* *merkle_tree_depth* usigned int; Auxilary proof-of-work merkle tree depth.
 * *aux_pow* - The array of aux_pow objects from the request.
 
 
@@ -1559,7 +1559,7 @@ It is possible to configure a node to serve client wallets with blockchain data 
 
 The following JSON RPC methods are specifically for facilitating this functionality.
 
-Every RPC Pay method request must include a client id.
+Every RPC Pay method request must include a client id (an elliptic curve public key).
 
 ### **rpc_access_info**
 
@@ -1597,11 +1597,13 @@ Outputs: *None*.
 
 ### **rpc_access_pay**
 
+Make a payment for an RPC-Pay operation.
+
 Alias: *None*.
 
 Inputs:
 
-* *paying_for* - string; // TODO
+* *paying_for* - string; The name of the RPC method to pay for.
 * *payment* - unsigned int; The number of credits to pay.
 
 Outputs: *None*.
@@ -1609,18 +1611,26 @@ Outputs: *None*.
 
 ### **rpc_access_tracking**
 
+Get tracking data about RPC methods that can be payed for.
+
 Alias: *None*.
 
 Inputs:
 
-* *clear* - boolean; // TODO
+* *clear* - boolean; If true, the node will clear all tracking histories.
 
 Outputs:
 
-* *data* - array; // TODO
+* *data* - array of entry objects; Each entry contains data about RPC methods currently tracked by the server.
+  * *rpc* - string; The name of the rpc method tracked.
+  * *count* - unsigned int; The number of times this method was called by RPC pay clients.
+  * *time* - unsigned int; The time spent performing this operation.
+  * *credits* - unsigned int; Count of credits collected for this method.
 
 
 ### **rpc_access_data**
+
+Get client records maintained by server.
 
 Alias: *None*.
 
@@ -1628,20 +1638,31 @@ Inputs: *None*.
 
 Outputs:
 
-* *entries* - array; // TODO
-* *hashrate* - unsigned int; // TODO
+* *entries* - array of entry objects; Each element in the array contains data about a client.
+  * *client* - string (32 byte hex); The public key for the client this entry refers to.
+  * *balance* - unsigned int; The credit balance this client holds with the server.
+  * *last_update_time* - unsigned int; The last time the entry was updated in unix epoch time.
+  * *credits_total* - unsigned int; Total credits earned via proof-of-work.
+  * *credits_used* - unsigned int; The total count of credits spent in exchange for RPC operations.
+  * *nonces_good* - unsigned int; The count of nonces accepted for credit.
+  * *nonces_stale* - unsigned int; The count of nonces submitted by client that were determined by the server to be stale.
+  * *nonces_bad* - unsigned int; The count of nonces submitted by the client that were determined by the server to be invalid.
+  * *nonces_dupe* - unsigned int; The count of nonces submitted by the client that were determined by the server to be duplicates.
+* *hashrate* - unsigned int; The number of hashes produced per second averaged over the last 600 seconds.
 
 
 ### **rpc_access_account**
 
+Get/manage the balance for a specific RPC-Pay client account.
+
 Inputs:
 
-* *client* - string; Client id.
-* *delta_balance* - signed int; // TODO
+* *client* - string (32 byte hex); Client id.
+* *delta_balance* - signed int; Value to change balance by. (Optional)
 
 Outputs:
 
-* *credits* - unsigned int; // TODO
+* *credits* - unsigned int; The specified client's credit balance.
 
 
 ---
